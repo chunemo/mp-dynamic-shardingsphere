@@ -1,0 +1,66 @@
+spring:
+  datasource:
+    dynamic:
+      primary: master
+      strict: false
+      datasource:
+        master:
+          url: jdbc:mysql://localhost:3306/shard1?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+          username: root
+          password: ""
+          driver-class-name: com.mysql.cj.jdbc.Driver
+        shard2:
+          url: jdbc:mysql://localhost:3306/shard2?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+          username: root
+          password: ""
+          driver-class-name: com.mysql.cj.jdbc.Driver
+      druid:
+        max-active: 100
+    type: com.alibaba.druid.pool.DruidDataSource
+  shardingsphere:
+    datasource:
+      names: ds1,ds2
+      ds1:
+        url: jdbc:mysql://localhost:3306/shard1?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+        username: root
+        password: ""
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        type: com.alibaba.druid.pool.DruidDataSource
+      ds2:
+        url: jdbc:mysql://localhost:3306/shard2?useUnicode=true&characterEncoding=utf-8&serverTimezone=Asia/Shanghai
+        username: root
+        password: ""
+        driver-class-name: com.mysql.cj.jdbc.Driver
+        type: com.alibaba.druid.pool.DruidDataSource
+    sharding:
+      # 默认分库策略
+      default-database-strategy:
+        inline:
+          sharding-column: id
+          algorithm-expression: ds$->{(int)((Math.abs(id.hashCode()) % 4) / 2) + 1}
+      # 默认分表策略
+      default-table-strategy:
+        none:
+      # 分表策略
+      tables:
+        user:
+          actual-data-nodes: ds$->{1..2}.user_$->{1..2}
+          table-strategy:
+            inline:
+              sharding-column: id
+              algorithm-expression: user_$->{Math.abs(id.hashCode()) % 2 + 1}
+        # 注意user_log关联user, 分库情况下拆分键应为关联字段user_id
+        user_log:
+          actual-data-nodes: ds$->{1..2}.user_log_$->{1..2}
+          # user_log分库策略
+          database-strategy:
+            inline:
+              sharding-column: user_id
+              algorithm-expression: ds$->{(int)((Math.abs(user_id.hashCode()) % 4) / 2) + 1}
+          table-strategy:
+            inline:
+              #仅分表时可以使用主键id作为拆分键
+              #sharding-column: id
+              #分库时拆分键必须为关联字段
+              sharding-column: user_id
+              algorithm-expression: user_log_$->{Math.abs(user_id.hashCode()) % 2 + 1}
