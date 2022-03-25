@@ -16,7 +16,13 @@ import java.util.Collection;
  */
 @Component
 public class StringHashCodeAlgorithm implements PreciseShardingAlgorithm<String> {
-
+    /**
+     * 分片
+     *
+     * @param tableNames           分表集合
+     * @param preciseShardingValue 分键值
+     * @return 分表
+     */
     @Override
     public String doSharding(Collection<String> tableNames, PreciseShardingValue<String> preciseShardingValue) {
         int hashCode = this.hashCode(preciseShardingValue.getValue());

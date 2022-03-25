@@ -16,7 +16,13 @@ import java.util.Collection;
  */
 @Component
 public class LongHashCodeAlgorithm implements PreciseShardingAlgorithm<Long> {
-
+    /**
+     * 分片
+     *
+     * @param tableNames           分表集合
+     * @param preciseShardingValue 分键值
+     * @return 分表
+     */
     @Override
     public String doSharding(Collection<String> tableNames, PreciseShardingValue<Long> preciseShardingValue) {
         long index = preciseShardingValue.getValue().longValue() % tableNames.size() + 1;
